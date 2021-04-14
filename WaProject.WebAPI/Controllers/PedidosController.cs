@@ -28,7 +28,6 @@ namespace WaProject.WebAPI.Controllers
             _uriService = uriService;
         }
 
-        #region [ GET ]
         // GET: v1/Pedidos
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Pedido>>> GetPedidos([FromQuery] PaginationFilter filter)
@@ -78,9 +77,7 @@ namespace WaProject.WebAPI.Controllers
 
             return pedido;
         }
-        #endregion
-
-        #region [ PATCH ]
+		
         [HttpPatch("atualizar-campos/{id}")]
         public async Task<ActionResult> PatchPedido(long id, [FromBody] JsonPatchDocument<Pedido> patchDocument)
         {
@@ -99,9 +96,7 @@ namespace WaProject.WebAPI.Controllers
 
             return Ok(pedido);
         }
-        #endregion
 
-        #region [ PUT ]
         // PUT: v1/Pedidos/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutPedido(long id, [FromBody] Pedido pedido)
@@ -131,9 +126,7 @@ namespace WaProject.WebAPI.Controllers
 
             return NoContent();
         }
-        #endregion
-
-        #region [ POST ]
+		
         // POST: v1/Pedidos
         [HttpPost]
         public async Task<ActionResult<Pedido>> PostPedido([FromBody] Pedido pedido)
@@ -144,9 +137,7 @@ namespace WaProject.WebAPI.Controllers
 
             return CreatedAtAction("GetPedido", new { id = pedido.PedidoId }, pedido);
         }
-        #endregion
-
-        #region [ DELETE ]
+		
         // DELETE: v1/Pedidos/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<Pedido>> DeletePedido(long id)
@@ -162,7 +153,6 @@ namespace WaProject.WebAPI.Controllers
 
             return pedido;
         }
-        #endregion
 
         private bool PedidoExists(long id)
         {
