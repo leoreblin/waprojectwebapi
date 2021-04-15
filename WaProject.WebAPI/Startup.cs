@@ -40,7 +40,10 @@ namespace WaProject.WebAPI
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WaProject", Version = "v1.0" });
             });
 
-            services.AddControllers().AddNewtonsoftJson();
+            services.AddControllers(options =>
+            {
+                options.ReturnHttpNotAcceptable = true;
+            }).AddNewtonsoftJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

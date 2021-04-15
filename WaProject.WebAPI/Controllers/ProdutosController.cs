@@ -6,12 +6,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WaProject.WebAPI.Context;
+using WaProject.WebAPI.Filters;
 using WaProject.WebAPI.Models;
 
 namespace WaProject.WebAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("v1/[controller]")]
     [ApiController]
+    [ApiKeyAuth]
     public class ProdutosController : ControllerBase
     {
         private readonly ApiContext _context;
@@ -43,8 +45,6 @@ namespace WaProject.WebAPI.Controllers
         }
 
         // PUT: api/Produtos/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProduto(long id, Produto produto)
         {
@@ -75,8 +75,6 @@ namespace WaProject.WebAPI.Controllers
         }
 
         // POST: api/Produtos
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost]
         public async Task<ActionResult<Produto>> PostProduto(Produto produto)
         {

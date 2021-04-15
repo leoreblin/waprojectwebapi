@@ -10,6 +10,7 @@ using WaProject.WebAPI.Context;
 using WaProject.WebAPI.Filters;
 using WaProject.WebAPI.Helpers;
 using WaProject.WebAPI.Models;
+using WaProject.WebAPI.Responses;
 using WaProject.WebAPI.Services;
 
 namespace WaProject.WebAPI.Controllers
@@ -56,7 +57,7 @@ namespace WaProject.WebAPI.Controllers
             var totalPedidos = _context.Pedidos.Count();
             var response = PaginationHelper.CreatePagedReponse<Pedido>(pedidosPaginados.ToList(), filtro, totalPedidos, _uriService, route);
 
-            return pedidosPaginados;
+            return Ok(new CustomResponse<List<Pedido>>(pedidosPaginados, false, "sucesso", new OkResult().StatusCode));
         }
 
         // GET: v1/Pedidos/5
@@ -64,9 +65,10 @@ namespace WaProject.WebAPI.Controllers
         public async Task<ActionResult<Pedido>> GetPedido(long id)
         {
             var pedido = await _context.Pedidos.FindAsync(id);
-
             if (pedido == null)
-                return NotFound();
+            {
+                return NotFound(new CustomResponse<Pedido>(null, true, "Não foi encontrado pedido com o Id informado.", new NotFoundResult().StatusCode));
+            }                
             
             pedido.Equipe ??= await _context.Equipes.FindAsync(pedido.EquipeId);
 
@@ -83,18 +85,18 @@ namespace WaProject.WebAPI.Controllers
         {
             if (patchDocument == null)
             {
-                return BadRequest("O objeto patchDocument é null");
+                return BadRequest(new CustomResponse<Pedido>(null, true, "O objeto patchDocument não pode ser null", new BadRequestResult().StatusCode));
             }
             var pedido = await _context.Pedidos.FindAsync(id);
             if (pedido == null)
             {
-                return NotFound();
+                return NotFound(new CustomResponse<Pedido>(null, true, "Não foi encontrado pedido com o Id informado.", new NotFoundResult().StatusCode)); ;
             }
 
             patchDocument.ApplyTo(pedido, ModelState);
             await _context.SaveChangesAsync();
 
-            return Ok(pedido);
+            return Ok(new CustomResponse<Pedido>(pedido, false, "sucesso", new OkResult().StatusCode));
         }
 
         // PUT: v1/Pedidos/5
@@ -103,7 +105,7 @@ namespace WaProject.WebAPI.Controllers
         {
             if (id != pedido.PedidoId)
             {
-                return BadRequest();
+                return BadRequest(new CustomResponse<Pedido>(null, true, "O Id do pedido informado não corresponde ao Id do objeto Pedido", new BadRequestResult().StatusCode));
             }
 
             _context.Entry(pedido).State = EntityState.Modified;
@@ -116,21 +118,51 @@ namespace WaProject.WebAPI.Controllers
             {
                 if (!PedidoExists(id))
                 {
-                    return NotFound();
+                    return NotFound(new CustomResponse<Pedido>(null, true, "Não foi encontrado pedido com o Id informado.", new NotFoundResult().StatusCode));
                 }
                 else
                 {
-                    return StatusCode((int)HttpStatusCode.InternalServerError);
+                    return new StatusCodeResult(500);
                 }
             }
 
-            return NoContent();
+            return Ok(new CustomResponse<Pedido>(await _context.Pedidos.FindAsync(id) ,false, "sucesso", new OkResult().StatusCode));
         }
 		
         // POST: v1/Pedidos
         [HttpPost]
         public async Task<ActionResult<Pedido>> PostPedido([FromBody] Pedido pedido)
         {
+            if (pedido.Itens.Count == 0)
+            {
+                return NotFound(new CustomResponse<Pedido>(null, true, "Nenhum item foi inserido no pedido.", new NotFoundResult().StatusCode)); 
+            }
+            else
+            {
+                List<string> itemIndexes = new List<string>();
+                int i = 0;
+                foreach (var item in pedido.Itens)
+                {
+                    i++;
+                    if (item.ProdutoId == 0 || await _context.Produtos.FindAsync(item.ProdutoId) == null)
+                    {
+                        itemIndexes.Add(i.ToString("00"));
+                    }
+                }
+
+                if (itemIndexes.Count > 0)
+                {
+                    return NotFound(
+                        new CustomResponse<Pedido>(
+                            null,
+                            true,
+                            "Não foi / foram encontrado(s) ou não foi / foram informado(s) o(s) Produto(s) no(s) Item(ns) " + string.Join(",", itemIndexes) + " solicitado(s).",
+                            new NotFoundResult().StatusCode
+                            )
+                        );
+                }
+            }
+
             pedido.DtCriacao = DateTime.Now;
             _context.Pedidos.Add(pedido);
             await _context.SaveChangesAsync();
